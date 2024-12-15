@@ -1,107 +1,153 @@
-
 #include <iostream>
+#include <string>
 using namespace std;
 
-struct SLLNode {
-    char data;
-    SLLNode* next;
+struct Node {
+    char bit;
+    Node* next;
+    Node* prev;
 };
 
-SLLNode* createSLL(int cnt);
-void displaySLL(SLLNode* head);
-SLLNode *headU = nullptr, *headA = nullptr, *headB = nullptr;
+class BinaryNumber {
+private:
+    Node* head;
+    Node* tail;
 
-void calculateSets();
+public:
+    BinaryNumber() : head(nullptr), tail(nullptr) {}
+
+    void addBit(char bit) {
+        Node* newNode = new Node{bit, nullptr, tail};
+        if (!head) {
+            head = newNode;
+            tail = newNode;
+        } else {
+            tail->next = newNode;
+            tail = newNode;
+        }
+    }
+
+    void display() {
+        Node* current = head;
+        while (current) {
+            cout << current->bit;
+            current = current->next;
+        }
+        cout << endl;
+    }
+
+    void onesComplement() {
+        Node* current = head;
+        while (current) {
+            current->bit = (current->bit == '0') ? '1' : '0';
+            current = current->next;
+        }
+    }
+
+    void twosComplement() {
+        onesComplement();
+        Node* current = tail;
+        bool carry = true;
+
+        while (current && carry) {
+            if (current->bit == '1') {
+                current->bit = '0';
+            } else {
+                current->bit = '1';
+                carry = false;
+            }
+            current = current->prev;
+        }
+
+        if (carry) {
+            addBit('1');
+        }
+    }
+
+    static BinaryNumber add(BinaryNumber& num1, BinaryNumber& num2) {
+        BinaryNumber result;
+        Node* ptr1 = num1.tail;
+        Node* ptr2 = num2.tail;
+        bool carry = false;
+
+        while (ptr1 || ptr2 || carry) {
+            int sum = carry;
+            if (ptr1) {
+                sum += (ptr1->bit - '0');
+                ptr1 = ptr1->prev;
+            }
+            if (ptr2) {
+                sum += (ptr2->bit - '0');
+                ptr2 = ptr2->prev;
+            }
+
+            carry = sum > 1;
+            result.addBit((sum % 2) + '0');
+        }
+
+        reverse(result);
+        return result;
+    }
+
+    static void reverse(BinaryNumber& binary) {
+        Node* current = binary.head;
+        Node* temp = nullptr;
+
+        while (current) {
+            temp = current->prev;
+            current->prev = current->next;
+            current->next = temp;
+            current = temp;
+        }
+
+        if (temp) {
+            binary.tail = binary.head;
+            binary.head = temp->prev;
+        }
+    }
+
+    ~BinaryNumber() {
+        while (head) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+};
+
+BinaryNumber inputBinaryNumber() {
+    BinaryNumber binary;
+    string binaryStr;
+    cout << "Enter a binary number: ";
+    cin >> binaryStr;
+    for (char bit : binaryStr) {
+        binary.addBit(bit);
+    }
+    return binary;
+}
 
 int main() {
-    cout << "\n\tEnter Students (All, Vanilla, Butterscotch):\n";
-    headU = createSLL(10);
-    headA = createSLL(3);
-    headB = createSLL(3);
-
-    cout << "\nSet 'U': ";
-    displaySLL(headU);
-    cout << "Set 'A': ";
-    displaySLL(headA);
-    cout << "Set 'B': ";
-    displaySLL(headB);
-
-    calculateSets();
+    cout << "Binary Number Operations using Doubly Linked List\n";
+    BinaryNumber num1 = inputBinaryNumber();
+    BinaryNumber num2 = inputBinaryNumber();
+    cout << "\nBinary Number 1: ";
+    num1.display();
+    cout << "1's Complement: ";
+    num1.onesComplement();
+    num1.display();
+    cout << "2's Complement: ";
+    num1.twosComplement();
+    num1.display();
+    cout << "\nBinary Number 2: ";
+    num2.display();
+    cout << "1's Complement: ";
+    num2.onesComplement();
+    num2.display();
+    cout << "2's Complement: ";
+    num2.twosComplement();
+    num2.display();
+    BinaryNumber sum = BinaryNumber::add(num1, num2);
+    cout << "\nSum of the two binary numbers: ";
+    sum.display();
     return 0;
-}
-
-SLLNode* createSLL(int cnt) {
-    SLLNode *head = nullptr, *tail = nullptr;
-    for (int i = 0; i < cnt; i++) {
-        SLLNode* newNode = new SLLNode;
-        cout << "\tEnter Student Initial: ";
-        cin >> newNode->data;
-        newNode->next = nullptr;
-        if (!head) head = tail = newNode;
-        else tail = tail->next = newNode;
-    }
-    return head;
-}
-
-void displaySLL(SLLNode* head) {
-    while (head) {
-        cout << head->data << " ";
-        head = head->next;
-    }
-    cout << endl;
-}
-
-void addUnique(SLLNode* head, char* arr, int& idx) {
-    while (head) {
-        bool found = false;
-        for (int j = 0; j < idx; j++) if (arr[j] == head->data) found = true;
-        if (!found) arr[idx++] = head->data;
-        head = head->next;
-    }
-}
-
-void calculateSets() {
-    char arr[10];
-    int idx = 0;
-
-    cout << "\nSet A U B: ";
-    addUnique(headA, arr, idx);
-    addUnique(headB, arr, idx);
-    for (int i = 0; i < idx; i++) cout << arr[i] << " ";
-
-    idx = 0;
-    cout << "\nSet A ^ B: ";
-    for (SLLNode *p = headA; p; p = p->next)
-        for (SLLNode *q = headB; q; q = q->next)
-            if (p->data == q->data) arr[idx++] = p->data;
-    for (int i = 0; i < idx; i++) cout << arr[i] << " ";
-
-    idx = 0;
-    cout << "\nSet A - B: ";
-    for (SLLNode *p = headA; p; p = p->next) {
-        bool found = false;
-        for (SLLNode *q = headB; q; q = q->next) if (p->data == q->data) found = true;
-        if (!found) arr[idx++] = p->data;
-    }
-    for (int i = 0; i < idx; i++) cout << arr[i] << " ";
-
-    idx = 0;
-    cout << "\nSet B - A: ";
-    for (SLLNode *q = headB; q; q = q->next) {
-        bool found = false;
-        for (SLLNode *p = headA; p; p = p->next) if (q->data == p->data) found = true;
-        if (!found) arr[idx++] = q->data;
-    }
-    for (int i = 0; i < idx; i++) cout << arr[i] << " ";
-
-    idx = 0;
-    cout << "\nSet U - (A U B): ";
-    for (SLLNode *p = headU; p; p = p->next) {
-        bool found = false;
-        for (SLLNode *q = headA; q; q = q->next) if (p->data == q->data) found = true;
-        for (SLLNode *r = headB; r; r = r->next) if (p->data == r->data) found = true;
-        if (!found) arr[idx++] = p->data;
-    }
-    for (int i = 0; i < idx; i++) cout << arr[i] << " ";
-    cout << endl;
 }
