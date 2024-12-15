@@ -1,64 +1,91 @@
-
 #include <iostream>
+#include <stack>
 #include <string>
-#define MAX 10
+#include <cctype>
 using namespace std;
 
-class Stack {
-private:
-    int top = -1;
-    string str = "rar rar";
-    char revStr[MAX] = "";
+int precedence(char op) {
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    return 0;
+}
 
-public:
-    // Function to display original and reversed strings
-    void getData() {
-        cout << "\nOriginal String: " << str << endl;
-        cout << "Reversed String: " << revStr << endl;
-    }
+string infixToPostfix(const string& infix) {
+    stack<char> operators;
+    string postfix;
 
-    // Function to check if stack is empty
-    int isEmpty() {
-        return (top == -1);
-    }
-
-    // Function to check if stack is full
-    int isFull() {
-        return (top == MAX - 1);
-    }
-
-    // Function to push a character onto the stack
-    void push(char ch) {
-        if (isFull()) {
-            cout << "Stack Overflow!" << endl;
+    for (char token : infix) {
+        if (isalnum(token)) {
+            postfix += token;
+        } else if (token == '(') {
+            operators.push(token);
+        } else if (token == ')') {
+            while (!operators.empty() && operators.top() != '(') {
+                postfix += operators.top();
+                operators.pop();
+            }
+            operators.pop();
         } else {
-            top++;
-            revStr[top] = ch;
+            while (!operators.empty() && precedence(operators.top()) >= precedence(token)) {
+                postfix += operators.top();
+                operators.pop();
+            }
+            operators.push(token);
         }
     }
 
-    // Function to check if the string is a palindrome
-    void isPalindrome() {
-        if (str == revStr) {
-            cout << "String is a Palindrome" << endl;
+    while (!operators.empty()) {
+        postfix += operators.top();
+        operators.pop();
+    }
+
+    return postfix;
+}
+
+int evaluatePostfix(const string& postfix) {
+    stack<int> operands;
+
+    for (char token : postfix) {
+        if (isalnum(token)) {
+            operands.push(token - '0');
         } else {
-            cout << "String is not a Palindrome" << endl;
+            int op2 = operands.top(); operands.pop();
+            int op1 = operands.top(); operands.pop();
+
+            switch (token) {
+                case '+':
+                    operands.push(op1 + op2);
+                    break;
+                case '-':
+                    operands.push(op1 - op2);
+                    break;
+                case '*':
+                    operands.push(op1 * op2);
+                    break;
+                case '/':
+                    operands.push(op1 / op2);
+                    break;
+                default:
+                    cerr << "Invalid operator!" << endl;
+                    return 0;
+            }
         }
     }
 
-    // Function to reverse the string using the stack
-    void reverse() {
-        for (int i = str.length() - 1; i >= 0; i--) {
-            push(str[i]);
-        }
-    }
-};
+    return operands.top();
+}
 
 int main() {
-    Stack stk;
-    stk.getData();
-    stk.reverse();
-    stk.getData();
-    stk.isPalindrome();
+    string infix, postfix;
+
+    cout << "Enter infix expression (single-character operands and operators only): ";
+    getline(cin, infix);
+
+    postfix = infixToPostfix(infix);
+    cout << "Postfix Expression: " << postfix << endl;
+
+    int result = evaluatePostfix(postfix);
+    cout << "Result of Postfix Evaluation: " << result << endl;
+
     return 0;
 }
