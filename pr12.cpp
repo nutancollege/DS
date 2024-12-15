@@ -1,60 +1,123 @@
 
 #include <iostream>
-#include <queue>
-#include <string>
 using namespace std;
-class JobQueue {
+
+class Deque {
 private:
-queue<string> jobs;
+    int* arr;
+    int front;
+    int rear;
+    int capacity;
+    int size;
+
 public:
-void addJob(string job) {
-jobs.push(job); 
-cout << "Job added: " << job << endl;
-}
-void deleteJob() {
-if (jobs.empty()) {
-cout << "No jobs to delete." << endl;
-} else {
-cout << "Job deleted: " << jobs.front() << endl;
-jobs.pop();
-}
-}
-void displayJobs() {
-if (jobs.empty()) {
-cout << "No jobs in the queue." << endl;
-return;
-}
-cout << "Current jobs in the queue: ";
-queue<string> tempQueue = jobs;
-while (!tempQueue.empty()) {
-cout << tempQueue.front() << " ";
-tempQueue.pop();
-}
-cout << endl;
-}
+    Deque(int cap) {
+        capacity = cap;
+        arr = new int[capacity];
+        front = -1;
+        rear = 0;
+        size = 0;
+    }
+
+    ~Deque() {
+        delete[] arr;
+    }
+
+    bool isEmpty() {
+        return size == 0;
+    }
+
+    bool isFull() {
+        return size == capacity;
+    }
+
+    void addFront(int item) {
+        if (isFull()) {
+            cout << "Deque is full. Cannot add " << item << " at front." << endl;
+            return;
+        }
+        front = (front + 1) % capacity;
+        arr[front] = item;
+        size++;
+        if (rear == 0) {
+            rear = front;
+        }
+    }
+
+    void addRear(int item) {
+        if (isFull()) {
+            cout << "Deque is full. Cannot add " << item << " at rear." << endl;
+            return;
+        }
+        rear = (rear - 1 + capacity) % capacity;
+        arr[rear] = item;
+        size++;
+        if (front == -1) {
+            front = rear;
+        }
+    }
+
+    void deleteFront() {
+        if (isEmpty()) {
+            cout << "Deque is empty. Cannot delete from front." << endl;
+            return;
+        }
+        cout << "Deleted from front: " << arr[front] << endl;
+        front = (front - 1 + capacity) % capacity;
+        size--;
+        if (size == 0) {
+            front = -1;
+            rear = 0;
+        }
+    }
+
+    void deleteRear() {
+        if (isEmpty()) {
+            cout << "Deque is empty. Cannot delete from rear." << endl;
+            return;
+        }
+        cout << "Deleted from rear: " << arr[rear] << endl;
+        rear = (rear + 1) % capacity;
+        size--;
+        if (size == 0) {
+            front = -1;
+            rear = 0;
+        }
+    }
+
+    void display() {
+        if (isEmpty()) {
+            cout << "Deque is empty." << endl;
+            return;
+        }
+        cout << "Deque elements: ";
+        for (int i = 0; i < size; i++) {
+            cout << arr[(rear + i) % capacity] << " ";
+        }
+        cout << endl;
+    }
 };
+
 int main() {
-JobQueue jobQueue;
-int choice;
-string job;
-while (true) {
-cout << "\nJob Queue Menu:\n1. Add Job\n2. Delete Job\n3. Display
-Jobs\n4. Exit\nEnter your choice: ";
-cin >> choice;
-if (choice == 1) {
-cout << "Enter job name: ";
-cin >> job;
-jobQueue.addJob(job);
-} else if (choice == 2) {
-jobQueue.deleteJob();
-} else if (choice == 3) {
-jobQueue.displayJobs();
-} else if (choice == 4) {
-cout << "Exiting..." << endl;
-break;
-} else {
-cout << "Invalid choice! Please try again." << endl;
+    Deque deque(5);
+
+    deque.addRear(10);
+    deque.addRear(20);
+    deque.addFront(5);
+    deque.display();
+
+    deque.deleteFront();
+    deque.display();
+
+    deque.addFront(1);
+    deque.addRear(30);
+    deque.display();
+
+    deque.deleteRear();
+    deque.display();
+
+    return 0;
 }
-}
-return 0;
-}
+
+
+
